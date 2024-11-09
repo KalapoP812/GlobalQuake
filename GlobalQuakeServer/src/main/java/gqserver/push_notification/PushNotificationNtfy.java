@@ -84,25 +84,21 @@ public class PushNotificationNtfy extends ListenerAdapter {
             GlobalQuake.instance.getEventHandler().registerEventListener(new GlobalQuakeEventListener() {
                 @Override
                 public void onQuakeCreate(QuakeCreateEvent event) {
-                    isQuakeNearby(event.earthquake());
                     sendQuakeCreateInfo(event.earthquake());
                 }
 
                 @Override
                 public void onQuakeUpdate(QuakeUpdateEvent event) {
-                    isQuakeNearby(event.earthquake());
                     sendQuakeUpdateInfo(event.earthquake());
                 }
 
                 @Override
                 public void onQuakeReport(QuakeReportEvent event) {
-                    isQuakeNearby(event.earthquake());
                     sendQuakeReportInfo(event.earthquake());
                 }
 
                 @Override
                 public void onQuakeRemove(QuakeRemoveEvent event) {
-                    isQuakeNearby(event.earthquake());
                     sendQuakeRemoveInfo(event.earthquake());
                 }
             });
