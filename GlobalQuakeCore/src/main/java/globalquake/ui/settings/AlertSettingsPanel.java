@@ -29,6 +29,26 @@ public class AlertSettingsPanel extends SettingsPanel {
     private JLabel label2;
     private IntensityScaleSelector eewThreshold;
     private JComboBox<Integer> comboBoxEEWClusterLevel;
+    private JTextField textFieldNtfy;
+    private JTextField textFieldPushoverUserID;
+    private JTextField textFieldPushoverToken;
+    private JCheckBox chkBoxNtfy;
+    private JCheckBox chkBoxPushover;
+    private JCheckBox chkBoxPushoverCustomSounds;
+    private JTextField textFieldPushoverSoundDetected;
+    private JTextField textFieldPushoverSoundFeltLight;
+    private JTextField textFieldPushoverSoundFeltStrong;
+    private JCheckBox chkBoxNtfyNearbyShaking;
+    private JCheckBox chkBoxNtfyFeltShaking;
+    private JComboBox<Integer> ntfyNearbyShakingPriorityListJComboBox;
+    private JComboBox<Integer> ntfyLightShakingPriorityListJComboBox;
+    private JComboBox<Integer> ntfyStrongShakingPriorityListJComboBox;
+    private JCheckBox chkBoxPushoverNearbyShaking;
+    private JCheckBox chkBoxPushoverFeltShaking;
+    private JComboBox<Integer> pushoverNearbyShakingPriorityListJComboBox;
+    private JComboBox<Integer> pushoverLightShakingPriorityListJComboBox;
+    private JComboBox<Integer> pushoverStrongShakingPriorityListJComboBox;
+
 
     public AlertSettingsPanel() {
         setLayout(new BorderLayout());
@@ -37,6 +57,8 @@ public class AlertSettingsPanel extends SettingsPanel {
 
         tabbedPane.addTab("Warnings", createWarningsTab());
         tabbedPane.addTab("Pings", createPingsTab());
+        tabbedPane.addTab("Ntfy", createNtfyTab());
+        tabbedPane.addTab("Pushover", createPushoverTab());
 
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -238,6 +260,355 @@ public class AlertSettingsPanel extends SettingsPanel {
         return panel;
     }
 
+    private Component createNtfyTab() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        panel.add(createNtfySettings());
+
+        fill(panel, 10);
+
+        return panel;
+    }
+
+    private Component createNtfySettings() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createTitledBorder("Ntfy Settings"));
+
+        chkBoxNtfy = new JCheckBox("Use Ntfy", Settings.useNtfy);
+        textFieldNtfy = new JTextField(Settings.ntfy, 12);
+        textFieldNtfy.setEnabled(chkBoxNtfy.isSelected());
+        chkBoxNtfy.addChangeListener(changeEvent -> textFieldNtfy.setEnabled(chkBoxNtfy.isSelected()));
+
+        JPanel ntfyPanel = new JPanel(new GridLayout(2, 1));
+        ntfyPanel.setBorder(BorderFactory.createTitledBorder("Ntfy Url"));
+
+        JPanel ntfyUseNtfyPanel = new JPanel();
+        ntfyUseNtfyPanel.setLayout(new BoxLayout(ntfyUseNtfyPanel, BoxLayout.X_AXIS));
+        ntfyUseNtfyPanel.add(chkBoxNtfy);
+
+        ntfyPanel.add(ntfyUseNtfyPanel);
+
+        JPanel ntfyUrlPanel = new JPanel();
+        ntfyUrlPanel.setLayout(new BoxLayout(ntfyUrlPanel, BoxLayout.X_AXIS));
+        ntfyUrlPanel.add(new JLabel("Ntfy Url: "));
+        ntfyUrlPanel.add(textFieldNtfy);
+
+        ntfyPanel.add(ntfyUrlPanel);
+
+        panel.add(ntfyPanel);
+
+        chkBoxNtfyNearbyShaking = new JCheckBox("Notify when nearby shaking is detected", Settings.ntfyNearbyShaking);
+        chkBoxNtfyFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.ntfyFeltShaking);
+
+        JPanel ntfyShakingPanel = new JPanel(new GridLayout(2, 1));
+        ntfyShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
+
+        JPanel ntfyNearbyShakingPanel = new JPanel();
+        ntfyNearbyShakingPanel.setLayout(new BoxLayout(ntfyNearbyShakingPanel, BoxLayout.X_AXIS));
+        ntfyNearbyShakingPanel.add(chkBoxNtfyNearbyShaking);
+
+        ntfyShakingPanel.add(ntfyNearbyShakingPanel);
+
+        JPanel ntfyFeltShakingPanel = new JPanel();
+        ntfyFeltShakingPanel.setLayout(new BoxLayout(ntfyFeltShakingPanel, BoxLayout.X_AXIS));
+        ntfyFeltShakingPanel.add(chkBoxNtfyFeltShaking);
+
+        ntfyShakingPanel.add(ntfyFeltShakingPanel);
+
+        panel.add(ntfyShakingPanel);
+
+        JPanel ntfyPriorityPanel = new JPanel(new GridLayout(3, 1));
+        ntfyPriorityPanel.setBorder(BorderFactory.createTitledBorder("Priority"));
+
+        JPanel ntfyPriorityNearbyShakingPanel = new JPanel();
+        ntfyPriorityNearbyShakingPanel.setLayout(new BoxLayout(ntfyPriorityNearbyShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model1 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        ntfyNearbyShakingPriorityListJComboBox = new JComboBox<>(model1);
+        ntfyNearbyShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case 2: value = "Low"; break;
+                        case 3: value = "Normal"; break;
+                        case 4: value = "High"; break;
+                        case 5: value = "Highest"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        ntfyNearbyShakingPriorityListJComboBox.setSelectedItem(Settings.ntfyNearbyShakingPriorityList);
+
+        ntfyPriorityNearbyShakingPanel.add(new JLabel("Priority for Nearby Shaking: "));
+        ntfyPriorityNearbyShakingPanel.add(ntfyNearbyShakingPriorityListJComboBox);
+
+        ntfyPriorityPanel.add(ntfyPriorityNearbyShakingPanel);
+
+        JPanel ntfyPriorityLightShakingPanel = new JPanel();
+        ntfyPriorityLightShakingPanel.setLayout(new BoxLayout(ntfyPriorityLightShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model2 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        ntfyLightShakingPriorityListJComboBox = new JComboBox<>(model2);
+        ntfyLightShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case 2: value = "Low"; break;
+                        case 3: value = "Normal"; break;
+                        case 4: value = "High"; break;
+                        case 5: value = "Highest"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        ntfyLightShakingPriorityListJComboBox.setSelectedItem(Settings.ntfyLightShakingPriorityList);
+
+        ntfyPriorityLightShakingPanel.add(new JLabel("Priority for Light Shaking: "));
+        ntfyPriorityLightShakingPanel.add(ntfyLightShakingPriorityListJComboBox);
+
+        ntfyPriorityPanel.add(ntfyPriorityLightShakingPanel);
+
+        JPanel ntfyPriorityStrongShakingPanel = new JPanel();
+        ntfyPriorityStrongShakingPanel.setLayout(new BoxLayout(ntfyPriorityStrongShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model3 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        ntfyStrongShakingPriorityListJComboBox = new JComboBox<>(model3);
+        ntfyStrongShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case 2: value = "Low"; break;
+                        case 3: value = "Normal"; break;
+                        case 4: value = "High"; break;
+                        case 5: value = "Highest"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        ntfyStrongShakingPriorityListJComboBox.setSelectedItem(Settings.ntfyStrongShakingPriorityList);
+
+        ntfyPriorityStrongShakingPanel.add(new JLabel("Priority for Strong Shaking: "));
+        ntfyPriorityStrongShakingPanel.add(ntfyStrongShakingPriorityListJComboBox);
+
+        ntfyPriorityPanel.add(ntfyPriorityStrongShakingPanel);
+
+        panel.add(ntfyPriorityPanel);
+
+        return panel;
+    }
+
+    private Component createPushoverTab() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        panel.add(createPushoverSettings());
+
+        fill(panel, 10);
+
+        return panel;
+    }
+
+    private Component createPushoverSettings() {
+        JPanel panel = new JPanel();
+
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createTitledBorder("Pushover Settings"));
+
+        chkBoxPushover = new JCheckBox("Use Pushover", Settings.usePushover);
+        textFieldPushoverUserID = new JTextField(Settings.pushoverUserID, 12);
+        textFieldPushoverUserID.setEnabled(chkBoxPushover.isSelected());
+        textFieldPushoverToken = new JTextField(Settings.pushoverToken, 12);
+        textFieldPushoverToken.setEnabled(chkBoxPushover.isSelected());
+        chkBoxPushover.addChangeListener(changeEvent -> {
+            textFieldPushoverUserID.setEnabled(chkBoxPushover.isSelected());
+            textFieldPushoverToken.setEnabled(chkBoxPushover.isSelected());
+        });
+
+        JPanel pushoverPanel = new JPanel(new GridLayout(3, 1));
+        pushoverPanel.setBorder(BorderFactory.createTitledBorder("Pushover Credentials"));
+
+        JPanel usePushoverPanel = new JPanel();
+        usePushoverPanel.setLayout(new BoxLayout(usePushoverPanel, BoxLayout.X_AXIS));
+        usePushoverPanel.add(chkBoxPushover);
+
+        pushoverPanel.add(usePushoverPanel);
+
+        JPanel pushoverIDPanel = new JPanel();
+        pushoverIDPanel.setLayout(new BoxLayout(pushoverIDPanel, BoxLayout.X_AXIS));
+        pushoverIDPanel.add(new JLabel("User ID: "));
+        pushoverIDPanel.add(textFieldPushoverUserID);
+
+        pushoverPanel.add(pushoverIDPanel);
+
+        JPanel pushoverTokenPanel = new JPanel();
+        pushoverTokenPanel.setLayout(new BoxLayout(pushoverTokenPanel, BoxLayout.X_AXIS));
+        pushoverTokenPanel.add(new JLabel("Token: "));
+        pushoverTokenPanel.add(textFieldPushoverToken);
+
+        pushoverPanel.add(pushoverTokenPanel);
+
+        panel.add(pushoverPanel);
+
+        chkBoxPushoverNearbyShaking = new JCheckBox("Notify when nearby shaking is detected", Settings.pushoverNearbyShaking);
+        chkBoxPushoverFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.pushoverFeltShaking);
+
+        JPanel pushoverShakingPanel = new JPanel(new GridLayout(2, 1));
+        pushoverShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
+
+        JPanel pushoverNearbyShakingPanel = new JPanel();
+        pushoverNearbyShakingPanel.setLayout(new BoxLayout(pushoverNearbyShakingPanel, BoxLayout.X_AXIS));
+        pushoverNearbyShakingPanel.add(chkBoxPushoverNearbyShaking);
+
+        pushoverShakingPanel.add(pushoverNearbyShakingPanel);
+
+        JPanel pushoverFeltShakingPanel = new JPanel();
+        pushoverFeltShakingPanel.setLayout(new BoxLayout(pushoverFeltShakingPanel, BoxLayout.X_AXIS));
+        pushoverFeltShakingPanel.add(chkBoxPushoverFeltShaking);
+
+        pushoverShakingPanel.add(pushoverFeltShakingPanel);
+
+        panel.add(pushoverShakingPanel);
+
+        JPanel pushoverPriorityPanel = new JPanel(new GridLayout(3, 1));
+        pushoverPriorityPanel.setBorder(BorderFactory.createTitledBorder("Priority"));
+
+        JPanel pushoverPriorityNearbyShakingPanel = new JPanel();
+        pushoverPriorityNearbyShakingPanel.setLayout(new BoxLayout(pushoverPriorityNearbyShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model1 = new DefaultComboBoxModel<>(new Integer[]{-1, 0, 1});
+        pushoverNearbyShakingPriorityListJComboBox = new JComboBox<>(model1);
+        pushoverNearbyShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case -1: value = "Low"; break;
+                        case 0: value = "Normal"; break;
+                        case 1: value = "High"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        pushoverNearbyShakingPriorityListJComboBox.setSelectedItem(Settings.pushoverNearbyShakingPriorityList);
+
+        pushoverPriorityNearbyShakingPanel.add(new JLabel("Priority for Nearby Shaking: "));
+        pushoverPriorityNearbyShakingPanel.add(pushoverNearbyShakingPriorityListJComboBox);
+
+        pushoverPriorityPanel.add(pushoverPriorityNearbyShakingPanel);
+
+        JPanel pushoverPriorityLightShakingPanel = new JPanel();
+        pushoverPriorityLightShakingPanel.setLayout(new BoxLayout(pushoverPriorityLightShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model2 = new DefaultComboBoxModel<>(new Integer[]{-1, 0, 1});
+
+        pushoverLightShakingPriorityListJComboBox = new JComboBox<>(model2);
+
+        pushoverLightShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case -1: value = "Low"; break;
+                        case 0: value = "Normal"; break;
+                        case 1: value = "High"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        pushoverLightShakingPriorityListJComboBox.setSelectedItem(Settings.pushoverLightShakingPriorityList);
+
+        pushoverPriorityLightShakingPanel.add(new JLabel("Priority for Light Shaking: "));
+        pushoverPriorityLightShakingPanel.add(pushoverLightShakingPriorityListJComboBox);
+
+        pushoverPriorityPanel.add(pushoverPriorityLightShakingPanel);
+
+        JPanel pushoverPriorityStrongShakingPanel = new JPanel();
+        pushoverPriorityStrongShakingPanel.setLayout(new BoxLayout(pushoverPriorityStrongShakingPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model3 = new DefaultComboBoxModel<>(new Integer[]{-1, 0, 1});
+
+        pushoverStrongShakingPriorityListJComboBox = new JComboBox<>(model3);
+
+        pushoverStrongShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case -1: value = "Low"; break;
+                        case 0: value = "Normal"; break;
+                        case 1: value = "High"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        pushoverStrongShakingPriorityListJComboBox.setSelectedItem(Settings.pushoverStrongShakingPriorityList);
+
+        pushoverPriorityStrongShakingPanel.add(new JLabel("Priority for Strong Shaking: "));
+        pushoverPriorityStrongShakingPanel.add(pushoverStrongShakingPriorityListJComboBox);
+
+        pushoverPriorityPanel.add(pushoverPriorityStrongShakingPanel);
+
+        panel.add(pushoverPriorityPanel);
+
+        chkBoxPushoverCustomSounds = new JCheckBox("Use custom sounds for Pushover", Settings.usePushoverCustomSounds);
+        textFieldPushoverSoundFeltLight = new JTextField(Settings.pushoverSoundFeltLight, 12);
+        textFieldPushoverSoundFeltLight.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+        textFieldPushoverSoundFeltStrong = new JTextField(Settings.pushoverSoundFeltStrong, 12);
+        textFieldPushoverSoundFeltStrong.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+        textFieldPushoverSoundDetected = new JTextField(Settings.pushoverSoundDetected, 12);
+        textFieldPushoverSoundDetected.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+        chkBoxPushoverCustomSounds.addChangeListener(changeEvent -> {
+            textFieldPushoverSoundFeltLight.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+            textFieldPushoverSoundFeltStrong.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+            textFieldPushoverSoundDetected.setEnabled(chkBoxPushoverCustomSounds.isSelected());
+        });
+
+        JPanel pushoverCustomSoundsPanel = new JPanel(new GridLayout(4, 1));
+        pushoverCustomSoundsPanel.setBorder(BorderFactory.createTitledBorder("Custom Sounds"));
+
+        JPanel pushoverUseCustomSoundsPanel = new JPanel();
+        pushoverUseCustomSoundsPanel.setLayout(new BoxLayout(pushoverUseCustomSoundsPanel, BoxLayout.X_AXIS));
+        pushoverUseCustomSoundsPanel.add(chkBoxPushoverCustomSounds);
+
+        pushoverCustomSoundsPanel.add(pushoverUseCustomSoundsPanel);
+
+        JPanel pushoverSoundDetectedPanel = new JPanel();
+        pushoverSoundDetectedPanel.setLayout(new BoxLayout(pushoverSoundDetectedPanel, BoxLayout.X_AXIS));
+        pushoverSoundDetectedPanel.add(new JLabel("Sound for Detected Earthquake: "));
+        pushoverSoundDetectedPanel.add(textFieldPushoverSoundDetected);
+
+        pushoverCustomSoundsPanel.add(pushoverSoundDetectedPanel);
+
+        JPanel pushoverSoundFeltLightPanel = new JPanel();
+        pushoverSoundFeltLightPanel.setLayout(new BoxLayout(pushoverSoundFeltLightPanel, BoxLayout.X_AXIS));
+        pushoverSoundFeltLightPanel.add(new JLabel("Sound for Light Shaking: "));
+        pushoverSoundFeltLightPanel.add(textFieldPushoverSoundFeltLight);
+
+        pushoverCustomSoundsPanel.add(pushoverSoundFeltLightPanel);
+
+        JPanel pushoverSoundFeltStrongPanel = new JPanel();
+        pushoverSoundFeltStrongPanel.setLayout(new BoxLayout(pushoverSoundFeltStrongPanel, BoxLayout.X_AXIS));
+        pushoverSoundFeltStrongPanel.add(new JLabel("Sound for Strong Shaking: "));
+        pushoverSoundFeltStrongPanel.add(textFieldPushoverSoundFeltStrong);
+
+        pushoverCustomSoundsPanel.add(pushoverSoundFeltStrongPanel);
+
+        panel.add(pushoverCustomSoundsPanel);
+
+        return panel;
+    }
+
     @Override
     public void refreshUI() {
         chkBoxLocal.setText("Alert when any earthquake occurs closer than (%s): ".formatted(Settings.getSelectedDistanceUnit().getShortName()));
@@ -282,6 +653,26 @@ public class AlertSettingsPanel extends SettingsPanel {
         Settings.eewScale = eewThreshold.getShakingScaleComboBox().getSelectedIndex();
         Settings.eewLevelIndex = eewThreshold.getLevelComboBox().getSelectedIndex();
         Settings.eewClusterLevel = (Integer) comboBoxEEWClusterLevel.getSelectedItem();
+
+        Settings.useNtfy = chkBoxNtfy.isSelected();
+        Settings.usePushover = chkBoxPushover.isSelected();
+        Settings.ntfy = textFieldNtfy.getText();
+        Settings.pushoverUserID = textFieldPushoverUserID.getText();
+        Settings.pushoverToken = textFieldPushoverToken.getText();
+        Settings.usePushoverCustomSounds = chkBoxPushoverCustomSounds.isSelected();
+        Settings.pushoverSoundDetected = textFieldPushoverSoundDetected.getText();
+        Settings.pushoverSoundFeltLight = textFieldPushoverSoundFeltLight.getText();
+        Settings.pushoverSoundFeltStrong = textFieldPushoverSoundFeltStrong.getText();
+        Settings.ntfyNearbyShaking = chkBoxNtfyNearbyShaking.isSelected();
+        Settings.ntfyFeltShaking = chkBoxNtfyFeltShaking.isSelected();
+        Settings.ntfyNearbyShakingPriorityList = (Integer) ntfyNearbyShakingPriorityListJComboBox.getSelectedItem();
+        Settings.ntfyLightShakingPriorityList = (Integer) ntfyLightShakingPriorityListJComboBox.getSelectedItem();
+        Settings.ntfyStrongShakingPriorityList = (Integer) ntfyStrongShakingPriorityListJComboBox.getSelectedItem();
+        Settings.pushoverNearbyShaking = chkBoxPushoverNearbyShaking.isSelected();
+        Settings.pushoverFeltShaking = chkBoxPushoverFeltShaking.isSelected();
+        Settings.pushoverNearbyShakingPriorityList = (Integer) pushoverNearbyShakingPriorityListJComboBox.getSelectedItem();
+        Settings.pushoverLightShakingPriorityList = (Integer) pushoverLightShakingPriorityListJComboBox.getSelectedItem();
+        Settings.pushoverStrongShakingPriorityList = (Integer) pushoverStrongShakingPriorityListJComboBox.getSelectedItem();
     }
 
     @Override

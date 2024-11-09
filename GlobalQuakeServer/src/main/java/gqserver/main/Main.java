@@ -15,6 +15,8 @@ import gqserver.bot.DiscordBot;
 import gqserver.fdsnws_event.FdsnwsEventsHTTPServer;
 
 import globalquake.utils.Scale;
+import gqserver.push_notification.PushNotificationNtfy;
+import gqserver.push_notification.PushNotificationPushover;
 import gqserver.server.GlobalQuakeServer;
 import gqserver.ui.server.DatabaseMonitorFrame;
 import org.apache.commons.cli.*;
@@ -177,6 +179,18 @@ public class Main {
         updateProgressBar("Starting Discord Bot...", (int) ((phase++ / PHASES) * 100.0));
         if (Settings.discordBotEnabled) {
             DiscordBot.init();
+        }
+
+        updateProgressBar("Starting Push Notification Ntfy...", (int) ((phase++ / PHASES) * 100.0));
+        if (Settings.useNtfy) {
+            PushNotificationNtfy.init();
+            PushNotificationNtfy.startNotification();
+        }
+
+        updateProgressBar("Starting Push Notification Pushover...", (int) ((phase++ / PHASES) * 100.0));
+        if (Settings.usePushover) {
+            PushNotificationPushover.init();
+            PushNotificationPushover.startNotification();
         }
 
         updateProgressBar("Updating Station Sources...", (int) ((phase++ / PHASES) * 100.0));

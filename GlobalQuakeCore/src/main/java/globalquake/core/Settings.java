@@ -179,6 +179,26 @@ public final class Settings {
     public static Boolean antialiasingClusters;
     @SuppressWarnings("unused")
     public static Boolean debugSendPGV;
+    // Pushover and Ntfy settings
+    public static String ntfy;
+    public static String pushoverUserID;
+    public static String pushoverToken;
+    public static Boolean useNtfy;
+    public static Boolean usePushover;
+    public static String pushoverSoundDetected;
+    public static String pushoverSoundFeltLight;
+    public static String pushoverSoundFeltStrong;
+    public static Boolean usePushoverCustomSounds;
+    public static Boolean ntfyNearbyShaking;
+    public static Boolean ntfyFeltShaking;
+    public static Integer ntfyNearbyShakingPriorityList;
+    public static Integer ntfyLightShakingPriorityList;
+    public static Integer ntfyStrongShakingPriorityList;
+    public static Boolean pushoverNearbyShaking;
+    public static Boolean pushoverFeltShaking;
+    public static Integer pushoverNearbyShakingPriorityList;
+    public static Integer pushoverLightShakingPriorityList;
+    public static Integer pushoverStrongShakingPriorityList;
 
     static {
         load();
@@ -327,6 +347,25 @@ public final class Settings {
         loadProperty("oldEventsMagnitudeFilterEnabled", "false");
         loadProperty("oldEventsMagnitudeFilter", "4.0", o -> validateDouble(0, 10, (Double) o));
         loadProperty("oldEventsOpacity", "100.0", o -> validateDouble(0, 100, (Double) o));
+        loadProperty("useNtfy", "false");
+        loadProperty("usePushover", "false");
+        loadProperty("ntfy", "");
+        loadProperty("pushoverUserID", "");
+        loadProperty("pushoverToken", "");
+        loadProperty("pushoverSoundDetected", "");
+        loadProperty("pushoverSoundFeltLight", "");
+        loadProperty("pushoverSoundFeltStrong", "");
+        loadProperty("usePushoverCustomSounds", "false");
+        loadProperty("ntfyNearbyShaking", "false");
+        loadProperty("ntfyFeltShaking", "false");
+        loadProperty("ntfyNearbyShakingPriorityList", "2");
+        loadProperty("ntfyLightShakingPriorityList", "4");
+        loadProperty("ntfyStrongShakingPriorityList", "5");
+        loadProperty("pushoverNearbyShaking", "false");
+        loadProperty("pushoverFeltShaking", "false");
+        loadProperty("pushoverNearbyShakingPriorityList", "-1");
+        loadProperty("pushoverLightShakingPriorityList", "0");
+        loadProperty("pushoverStrongShakingPriorityList", "1");
     }
 
     private static void runUpdateService() throws IOException {
