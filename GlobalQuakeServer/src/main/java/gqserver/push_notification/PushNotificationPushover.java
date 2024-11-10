@@ -74,7 +74,10 @@ public class PushNotificationPushover extends ListenerAdapter {
 
                 @Override
                 public void onQuakeRemove(QuakeRemoveEvent event) {
-                    sendQuakeRemoveInfoEEW(event.earthquake());
+                    // if user was warned about the earthquake, send a notification that the earthquake was cancelled
+                    if (maxHomeShakingIntensity > 0) {
+                        sendQuakeRemoveInfoEEW(event.earthquake());
+                    }
                     homeShakingIntensity = 0;
                     maxHomeShakingIntensity = 0;
                 }
@@ -146,7 +149,7 @@ public class PushNotificationPushover extends ListenerAdapter {
 
         String Title = "Revision #%d".formatted(earthquake.getRevisionID());
 
-        sendNotification(Title, createDescription(earthquake), 0, false, null);
+        sendNotification(Title, createDescription(earthquake), -1, false, null);
     }
 
     private static void sendQuakeUpdateInfoEEW(Earthquake earthquake) {
@@ -156,7 +159,7 @@ public class PushNotificationPushover extends ListenerAdapter {
 
         String Title = "";
         String customSound = "";
-        int priority = 2; // do not make an audible notification when revising, unless shaking intensity increased
+        int priority = -1; // do not make an audible notification when revising, unless shaking intensity increased
 
         if (homeShakingIntensity == 0) {
             Title = "No shaking is expected";
@@ -196,7 +199,7 @@ public class PushNotificationPushover extends ListenerAdapter {
         String Title = "Cancelled Earthquake";
         String message = "M%.1f %s".formatted(earthquake.getMag(), earthquake.getRegion());
 
-        sendNotification(Title, message, 0, false, null);
+        sendNotification(Title, message, Settings.pushoverNearbyShakingPriorityList, false, null);
     }
 
     private static void sendQuakeRemoveInfoEEW(Earthquake earthquake) {

@@ -73,7 +73,10 @@ public class PushNotificationNtfy extends ListenerAdapter {
 
                 @Override
                 public void onQuakeRemove(QuakeRemoveEvent event) {
-                    sendQuakeRemoveInfoEEW(event.earthquake());
+                    // if user was warned about the earthquake, send a notification that the earthquake was cancelled
+                    if (maxHomeShakingIntensity > 0) {
+                        sendQuakeRemoveInfoEEW(event.earthquake());
+                    }
                     homeShakingIntensity = 0;
                     maxHomeShakingIntensity = 0;
                 }
