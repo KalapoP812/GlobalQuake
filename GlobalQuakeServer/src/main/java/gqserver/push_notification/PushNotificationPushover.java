@@ -41,6 +41,7 @@ public class PushNotificationPushover extends ListenerAdapter {
             GlobalQuake.instance.getEventHandler().registerEventListener(new GlobalQuakeEventListener() {
                 @Override
                 public void onQuakeCreate(QuakeCreateEvent event) {
+                    maxHomeShakingIntensity = 0;
                     homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
                     // if newly detected earthquake is felt, send notification
                     if (homeShakingIntensity > 0) {
@@ -56,10 +57,9 @@ public class PushNotificationPushover extends ListenerAdapter {
                     if (homeShakingIntensity > 0 && maxHomeShakingIntensity == 0) {
                         sendQuakeCreateInfoEEW(event.earthquake());
                         maxHomeShakingIntensity = homeShakingIntensity;
-                        // if current earthquake was shown as felt but shaking is not expected, send notification and stop notifying
+                        // if current earthquake was shown as felt but shaking is not expected, send notification
                     } else if (homeShakingIntensity == 0 && maxHomeShakingIntensity > 0) {
                         sendQuakeUpdateInfoEEW(event.earthquake());
-                        maxHomeShakingIntensity = 0;
                         // otherwise, update the notification
                     } else if (homeShakingIntensity > 0) {
                         sendQuakeUpdateInfoEEW(event.earthquake());
@@ -89,11 +89,11 @@ public class PushNotificationPushover extends ListenerAdapter {
             GlobalQuake.instance.getEventHandler().registerEventListener(new GlobalQuakeEventListener() {
                 @Override
                 public void onQuakeCreate(QuakeCreateEvent event) {
+                    maxHomeShakingIntensity = 0;
                     homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
                     // Do not send nearby Earthquake notification when user is already warned about felt shaking
                     if (!(Settings.pushoverFeltShaking && homeShakingIntensity > 0)) {
                         sendQuakeCreateInfo(event.earthquake());
-                        maxHomeShakingIntensity = 0; // Prevent sending no shaking expected notification
                     }
                 }
 
@@ -103,7 +103,6 @@ public class PushNotificationPushover extends ListenerAdapter {
                     // Do not send nearby Earthquake notification when user is already warned about felt shaking
                     if (!(Settings.pushoverFeltShaking && homeShakingIntensity > 0)) {
                         sendQuakeUpdateInfo(event.earthquake());
-                        maxHomeShakingIntensity = 0;
                     }
                 }
 
@@ -118,7 +117,6 @@ public class PushNotificationPushover extends ListenerAdapter {
                     // Do not send nearby Earthquake notification when user is already warned about felt shaking
                     if (!(Settings.pushoverFeltShaking && homeShakingIntensity > 0)) {
                         sendQuakeRemoveInfo(event.earthquake());
-                        maxHomeShakingIntensity = 0;
                     }
                 }
             });
