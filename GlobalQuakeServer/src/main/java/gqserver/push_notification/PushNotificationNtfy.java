@@ -3,10 +3,7 @@ package gqserver.push_notification;
 import globalquake.core.GlobalQuake;
 import globalquake.core.earthquake.data.Earthquake;
 import globalquake.core.events.GlobalQuakeEventListener;
-import globalquake.core.events.specific.QuakeCreateEvent;
-import globalquake.core.events.specific.QuakeRemoveEvent;
-import globalquake.core.events.specific.QuakeReportEvent;
-import globalquake.core.events.specific.QuakeUpdateEvent;
+import globalquake.core.events.specific.*;
 import globalquake.core.geo.DistanceUnit;
 import globalquake.core.geo.taup.TauPTravelTimeCalculator;
 import globalquake.core.intensity.IntensityScales;
@@ -29,96 +26,109 @@ public class PushNotificationNtfy extends ListenerAdapter {
 
     private static final Set<Earthquake> measuredQuakes = new HashSet<>();
 
-    private static int homeShakingIntensity;
-    private static int maxHomeShakingIntensity;
     private static String homeMMI;
     private static String homeShindo;
 
+    private static String [][] earthquakeList = new String[100][3];
+    /*[x][0]: Quake ID
+    [x][1]: Intensity at home location
+    [x][2]: Max intensity at home location*/
+    private static int currentEarthquake = -1;
+
     public static void init() {
-        // for felt earthquakes
-        if (Settings.ntfyFeltShaking) {
+        if (Settings.ntfyFeltShaking || Settings.ntfyNearbyShaking) {
             GlobalQuake.instance.getEventHandler().registerEventListener(new GlobalQuakeEventListener() {
                 @Override
                 public void onQuakeCreate(QuakeCreateEvent event) {
-                    maxHomeShakingIntensity = 0;
-                    homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
-                    // if newly detected earthquake is felt, send notification
-                    if (homeShakingIntensity > 0) {
-                        sendQuakeCreateInfoEEW(event.earthquake());
-                        maxHomeShakingIntensity = homeShakingIntensity;
+                    if (currentEarthquake < 99) {
+                        currentEarthquake++;
+                    } else {
+                        currentEarthquake = 0;
+                    }
+                    earthquakeList[currentEarthquake][0] = String.valueOf(event.earthquake().getUuid());
+                    earthquakeList[currentEarthquake][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
+                    earthquakeList[currentEarthquake][2] = earthquakeList[currentEarthquake][1];
+
+                    if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                        if (earthquakeList[currentEarthquake][1].equals("0")) {
+                            sendQuakeCreateInfo(event.earthquake());
+                        } else {
+                            sendQuakeCreateInfoEEW(event.earthquake());
+                        }
+                    } else if (Settings.ntfyNearbyShaking) {
+                        sendQuakeCreateInfo(event.earthquake());
+                    } else if (Settings.ntfyFeltShaking) {
+                        if (!earthquakeList[currentEarthquake][1].equals("0")) {
+                            sendQuakeCreateInfoEEW(event.earthquake());
+                        }
                     }
                 }
 
                 @Override
                 public void onQuakeUpdate(QuakeUpdateEvent event) {
-                    homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
-                    // if current earthquake was not felt but now is, send notification
-                    if (homeShakingIntensity > 0 && maxHomeShakingIntensity == 0) {
-                        sendQuakeCreateInfoEEW(event.earthquake());
-                        maxHomeShakingIntensity = homeShakingIntensity;
-                    // if current earthquake was shown as felt but shaking is not expected, send notification
-                    } else if (homeShakingIntensity == 0 && maxHomeShakingIntensity > 0) {
-                        sendQuakeUpdateInfoEEW(event.earthquake());
-                    // otherwise, update the notification
-                    } else if (homeShakingIntensity > 0) {
-                        sendQuakeUpdateInfoEEW(event.earthquake());
+                    for (int i = 0; i < 99; i++) {
+                        if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
+                            earthquakeList[i][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
+
+                            if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                                if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
+                                    sendQuakeUpdateInfo(event.earthquake());
+                                } else {
+                                    determineType(event, i);
+                                }
+                            } else if (Settings.ntfyNearbyShaking) {
+                                sendQuakeUpdateInfo(event.earthquake());
+                            } else if (Settings.ntfyFeltShaking) {
+                                determineType(event, i);
+                            }
+
+                            if (Integer.parseInt(earthquakeList[i][2]) < Integer.parseInt(earthquakeList[i][1])) {
+                                earthquakeList[i][2] = earthquakeList[i][1];
+                            }
+                        }
                     }
                 }
 
                 @Override
-                public void onQuakeReport(QuakeReportEvent event) {
-                    // after the earthquake is reported, reset the shaking intensity
-                    homeShakingIntensity = 0;
-                    maxHomeShakingIntensity = 0;
+                public void onQuakeArchive(QuakeArchiveEvent event) {
+                    if (Settings.ntfyNearbyShaking)
+                        sendQuakeReportInfo(event.earthquake());
                 }
 
                 @Override
                 public void onQuakeRemove(QuakeRemoveEvent event) {
-                    // if user was warned about the earthquake, send a notification that the earthquake was cancelled
-                    if (maxHomeShakingIntensity > 0) {
-                        sendQuakeRemoveInfoEEW(event.earthquake());
+                    for (int i = 0; i < 99; i++) {
+                        if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
+                            if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                                if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
+                                    sendQuakeRemoveInfo(event.earthquake());
+                                } else {
+                                    sendQuakeRemoveInfoEEW(event.earthquake());
+                                }
+                            } else if (Settings.ntfyNearbyShaking) {
+                                sendQuakeRemoveInfo(event.earthquake());
+                            } else if (Settings.ntfyFeltShaking) {
+                                if (!earthquakeList[currentEarthquake][1].equals("0")) {
+                                    sendQuakeRemoveInfoEEW(event.earthquake());
+                                }
+                            }
+                        }
                     }
-                    homeShakingIntensity = 0;
-                    maxHomeShakingIntensity = 0;
                 }
             });
         }
-        // for nearby earthquakes
-        if (Settings.ntfyNearbyShaking) {
-            GlobalQuake.instance.getEventHandler().registerEventListener(new GlobalQuakeEventListener() {
-                @Override
-                public void onQuakeCreate(QuakeCreateEvent event) {
-                    maxHomeShakingIntensity = 0;
-                    homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
-                    // Do not send nearby Earthquake notification when user is already warned about felt shaking
-                    if (!(Settings.ntfyFeltShaking && homeShakingIntensity > 0)) {
-                        sendQuakeCreateInfo(event.earthquake());
-                    }
-                }
+    }
 
-                @Override
-                public void onQuakeUpdate(QuakeUpdateEvent event) {
-                    homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
-                    // Do not send nearby Earthquake notification when user is already warned about felt shaking
-                    if (!(Settings.ntfyFeltShaking && homeShakingIntensity > 0)) {
-                        sendQuakeUpdateInfo(event.earthquake());
-                    }
-                }
-
-                @Override
-                public void onQuakeReport(QuakeReportEvent event) {
-                    sendQuakeReportInfo(event.earthquake());
-                }
-
-                @Override
-                public void onQuakeRemove(QuakeRemoveEvent event) {
-                    homeShakingIntensity = determineHomeShakingIntensity(event.earthquake());
-                    // Do not send nearby Earthquake notification when user is already warned about felt shaking
-                    if (!(Settings.ntfyFeltShaking && homeShakingIntensity > 0)) {
-                        sendQuakeRemoveInfo(event.earthquake());
-                    }
-                }
-            });
+    private static void determineType(QuakeUpdateEvent event, int i) {
+        // if current earthquake was not felt but now is, send notification
+        if (Integer.parseInt(earthquakeList[i][1]) > 0 && Integer.parseInt(earthquakeList[i][2]) == 0) {
+            sendQuakeCreateInfoEEW(event.earthquake());
+            // if current earthquake was shown as felt but shaking is not expected, send notification
+        } else if (Integer.parseInt(earthquakeList[i][1]) == 0 && Integer.parseInt(earthquakeList[i][2]) > 0) {
+            sendQuakeUpdateInfoEEW(event.earthquake(), i);
+            // otherwise, update the notification
+        } else if (Integer.parseInt(earthquakeList[i][1]) > 0) {
+            sendQuakeUpdateInfoEEW(event.earthquake(), i);
         }
     }
 
@@ -140,10 +150,10 @@ public class PushNotificationNtfy extends ListenerAdapter {
         String Title = "";
         int priority = 2;
 
-        if (homeShakingIntensity == 1) {
+        if (earthquakeList[currentEarthquake][1].equals("1")) {
             priority = Settings.ntfyLightShakingPriorityList;
             Title = "Light shaking is expected";
-        } else if (homeShakingIntensity == 2) {
+        } else if (earthquakeList[currentEarthquake][1].equals("2")) {
             priority = Settings.ntfyStrongShakingPriorityList;
             Title = "Strong shaking is expected";
         }
@@ -161,7 +171,7 @@ public class PushNotificationNtfy extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), 2);
     }
 
-    private static void sendQuakeUpdateInfoEEW(Earthquake earthquake) {
+    private static void sendQuakeUpdateInfoEEW(Earthquake earthquake, int currentEarthquakeUpdate) {
         if (!Settings.useNtfy) {
             return;
         }
@@ -169,19 +179,16 @@ public class PushNotificationNtfy extends ListenerAdapter {
         String Title = "";
         int priority = 2; // do not make an audible notification when revising, unless shaking intensity increased
 
-        if (homeShakingIntensity == 0) {
-            Title = "No shaking is expected";
-        }
-        else if (homeShakingIntensity == 1) {
-            Title = "Light shaking is expected";
-        } else if (homeShakingIntensity == 2) {
-            Title = "Strong shaking is expected";
-        }
+        Title = switch (earthquakeList[currentEarthquakeUpdate][1]) {
+            case "0" -> "No shaking is expected";
+            case "1" -> "Light shaking is expected";
+            case "2" -> "Strong shaking is expected";
+            default -> Title;
+        };
 
         // if shaking intensity increased, prioritize the notification
-        if (maxHomeShakingIntensity < homeShakingIntensity) {
+        if (Integer.parseInt(earthquakeList[currentEarthquakeUpdate][2]) < Integer.parseInt(earthquakeList[currentEarthquakeUpdate][1])) {
             priority = Settings.ntfyStrongShakingPriorityList;
-            maxHomeShakingIntensity = homeShakingIntensity;
         }
 
         sendNotification(Title, createDescription(earthquake), priority);
@@ -314,8 +321,8 @@ public class PushNotificationNtfy extends ListenerAdapter {
     }
 
     private static int determineHomeShakingIntensity(Earthquake earthquake) {
-        double _dist = GeoUtils.geologicalDistance(earthquake.getLat(), earthquake.getLon(), -earthquake.getDepth(), Settings.homeLat, Settings.homeLon, 0);
-        double pga = GeoUtils.pgaFunction(earthquake.getMag(), _dist, earthquake.getDepth());
+        double dist = GeoUtils.geologicalDistance(earthquake.getLat(), earthquake.getLon(), -earthquake.getDepth(), Settings.homeLat, Settings.homeLon, 0);
+        double pga = GeoUtils.pgaFunction(earthquake.getMag(), dist, earthquake.getDepth());
 
         homeMMI = formatLevel(IntensityScales.MMI.getLevel(pga));
         homeShindo = formatLevel(IntensityScales.SHINDO.getLevel(pga));
