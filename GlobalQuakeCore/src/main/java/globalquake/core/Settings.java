@@ -199,6 +199,8 @@ public final class Settings {
     public static Integer pushoverNearbyShakingPriorityList;
     public static Integer pushoverLightShakingPriorityList;
     public static Integer pushoverStrongShakingPriorityList;
+    public static Boolean ntfySendRevisions;
+    public static Boolean pushoverSendRevisions;
 
     static {
         load();
@@ -366,6 +368,8 @@ public final class Settings {
         loadProperty("pushoverNearbyShakingPriorityList", "-1");
         loadProperty("pushoverLightShakingPriorityList", "0");
         loadProperty("pushoverStrongShakingPriorityList", "1");
+        loadProperty("ntfySendRevisions", "false");
+        loadProperty("pushoverSendRevisions", "false");
     }
 
     private static void runUpdateService() throws IOException {

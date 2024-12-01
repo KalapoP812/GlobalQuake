@@ -51,13 +51,13 @@ public class PushNotificationPushover extends ListenerAdapter {
                     earthquakeList[currentEarthquake][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
                     earthquakeList[currentEarthquake][2] = earthquakeList[currentEarthquake][1];
 
-                    if (Settings.pushoverNearbyShaking && Settings.pushoverFeltShaking) {
+                    if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) && Settings.pushoverFeltShaking) {
                         if (earthquakeList[currentEarthquake][1].equals("0")) {
                             sendQuakeCreateInfo(event.earthquake());
                         } else {
                             sendQuakeCreateInfoEEW(event.earthquake());
                         }
-                    } else if (Settings.pushoverNearbyShaking) {
+                    } else if (Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) {
                         sendQuakeCreateInfo(event.earthquake());
                     } else if (Settings.pushoverFeltShaking) {
                         if (!earthquakeList[currentEarthquake][1].equals("0")) {
@@ -72,13 +72,13 @@ public class PushNotificationPushover extends ListenerAdapter {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
                             earthquakeList[i][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
 
-                            if (Settings.pushoverNearbyShaking && Settings.pushoverFeltShaking) {
+                            if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) && Settings.pushoverFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
                                     sendQuakeUpdateInfo(event.earthquake());
                                 } else {
                                     determineType(event, i);
                                 }
-                            } else if (Settings.pushoverNearbyShaking) {
+                            } else if (Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) {
                                 sendQuakeUpdateInfo(event.earthquake());
                             } else if (Settings.pushoverFeltShaking) {
                                 determineType(event, i);
@@ -101,13 +101,13 @@ public class PushNotificationPushover extends ListenerAdapter {
                 public void onQuakeRemove(QuakeRemoveEvent event) {
                     for (int i = 0; i < 99; i++) {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
-                            if (Settings.pushoverNearbyShaking && Settings.pushoverFeltShaking) {
+                            if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) && Settings.pushoverFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
                                     sendQuakeRemoveInfo(event.earthquake());
                                 } else {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
                                 }
-                            } else if (Settings.pushoverNearbyShaking) {
+                            } else if (Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) {
                                 sendQuakeRemoveInfo(event.earthquake());
                             } else if (Settings.pushoverFeltShaking) {
                                 if (!earthquakeList[currentEarthquake][1].equals("0")) {

@@ -48,6 +48,8 @@ public class AlertSettingsPanel extends SettingsPanel {
     private JComboBox<Integer> pushoverNearbyShakingPriorityListJComboBox;
     private JComboBox<Integer> pushoverLightShakingPriorityListJComboBox;
     private JComboBox<Integer> pushoverStrongShakingPriorityListJComboBox;
+    private JCheckBox chkBoxNtfySendRevisions;
+    private JCheckBox chkBoxPushoverSendRevisions;
 
 
     public AlertSettingsPanel() {
@@ -300,9 +302,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         panel.add(ntfyPanel);
 
         chkBoxNtfyNearbyShaking = new JCheckBox("Notify when nearby shaking is detected", Settings.ntfyNearbyShaking);
+        chkBoxNtfySendRevisions = new JCheckBox("Notify every revision update for nearby shaking", Settings.ntfySendRevisions);
+        chkBoxNtfySendRevisions.setEnabled(chkBoxNtfyNearbyShaking.isSelected());
+        chkBoxNtfyNearbyShaking.addChangeListener(changeEvent -> chkBoxNtfySendRevisions.setEnabled(chkBoxNtfyNearbyShaking.isSelected()));
         chkBoxNtfyFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.ntfyFeltShaking);
 
-        JPanel ntfyShakingPanel = new JPanel(new GridLayout(2, 1));
+        JPanel ntfyShakingPanel = new JPanel(new GridLayout(3, 1));
         ntfyShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
 
         JPanel ntfyNearbyShakingPanel = new JPanel();
@@ -310,6 +315,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         ntfyNearbyShakingPanel.add(chkBoxNtfyNearbyShaking);
 
         ntfyShakingPanel.add(ntfyNearbyShakingPanel);
+
+        JPanel ntfySendRevisionsPanel = new JPanel();
+        ntfySendRevisionsPanel.setLayout(new BoxLayout(ntfySendRevisionsPanel, BoxLayout.X_AXIS));
+        ntfySendRevisionsPanel.add(chkBoxNtfySendRevisions);
+
+        ntfyShakingPanel.add(ntfySendRevisionsPanel);
 
         JPanel ntfyFeltShakingPanel = new JPanel();
         ntfyFeltShakingPanel.setLayout(new BoxLayout(ntfyFeltShakingPanel, BoxLayout.X_AXIS));
@@ -458,9 +469,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         panel.add(pushoverPanel);
 
         chkBoxPushoverNearbyShaking = new JCheckBox("Notify when nearby shaking is detected", Settings.pushoverNearbyShaking);
+        chkBoxPushoverSendRevisions = new JCheckBox("Notify every revision update for nearby shaking", Settings.pushoverSendRevisions);
+        chkBoxPushoverSendRevisions.setEnabled(chkBoxPushoverNearbyShaking.isSelected());
+        chkBoxPushoverNearbyShaking.addChangeListener(changeEvent -> chkBoxPushoverSendRevisions.setEnabled(chkBoxPushoverNearbyShaking.isSelected()));
         chkBoxPushoverFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.pushoverFeltShaking);
 
-        JPanel pushoverShakingPanel = new JPanel(new GridLayout(2, 1));
+        JPanel pushoverShakingPanel = new JPanel(new GridLayout(3, 1));
         pushoverShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
 
         JPanel pushoverNearbyShakingPanel = new JPanel();
@@ -468,6 +482,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         pushoverNearbyShakingPanel.add(chkBoxPushoverNearbyShaking);
 
         pushoverShakingPanel.add(pushoverNearbyShakingPanel);
+
+        JPanel pushoverSendRevision = new JPanel();
+        pushoverSendRevision.setLayout(new BoxLayout(pushoverSendRevision, BoxLayout.X_AXIS));
+        pushoverSendRevision.add(chkBoxPushoverSendRevisions);
+
+        pushoverShakingPanel.add(pushoverSendRevision);
 
         JPanel pushoverFeltShakingPanel = new JPanel();
         pushoverFeltShakingPanel.setLayout(new BoxLayout(pushoverFeltShakingPanel, BoxLayout.X_AXIS));
@@ -673,6 +693,8 @@ public class AlertSettingsPanel extends SettingsPanel {
         Settings.pushoverNearbyShakingPriorityList = (Integer) pushoverNearbyShakingPriorityListJComboBox.getSelectedItem();
         Settings.pushoverLightShakingPriorityList = (Integer) pushoverLightShakingPriorityListJComboBox.getSelectedItem();
         Settings.pushoverStrongShakingPriorityList = (Integer) pushoverStrongShakingPriorityListJComboBox.getSelectedItem();
+        Settings.ntfySendRevisions = chkBoxNtfySendRevisions.isSelected();
+        Settings.pushoverSendRevisions = chkBoxPushoverSendRevisions.isSelected();
     }
 
     @Override

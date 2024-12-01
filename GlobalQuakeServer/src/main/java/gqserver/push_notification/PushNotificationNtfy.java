@@ -49,13 +49,13 @@ public class PushNotificationNtfy extends ListenerAdapter {
                     earthquakeList[currentEarthquake][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
                     earthquakeList[currentEarthquake][2] = earthquakeList[currentEarthquake][1];
 
-                    if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                    if ((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) && Settings.ntfyFeltShaking) {
                         if (earthquakeList[currentEarthquake][1].equals("0")) {
                             sendQuakeCreateInfo(event.earthquake());
                         } else {
                             sendQuakeCreateInfoEEW(event.earthquake());
                         }
-                    } else if (Settings.ntfyNearbyShaking) {
+                    } else if (Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) {
                         sendQuakeCreateInfo(event.earthquake());
                     } else if (Settings.ntfyFeltShaking) {
                         if (!earthquakeList[currentEarthquake][1].equals("0")) {
@@ -70,13 +70,13 @@ public class PushNotificationNtfy extends ListenerAdapter {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
                             earthquakeList[i][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
 
-                            if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                            if ((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) && Settings.ntfyFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
                                     sendQuakeUpdateInfo(event.earthquake());
                                 } else {
                                     determineType(event, i);
                                 }
-                            } else if (Settings.ntfyNearbyShaking) {
+                            } else if (Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) {
                                 sendQuakeUpdateInfo(event.earthquake());
                             } else if (Settings.ntfyFeltShaking) {
                                 determineType(event, i);
@@ -99,13 +99,13 @@ public class PushNotificationNtfy extends ListenerAdapter {
                 public void onQuakeRemove(QuakeRemoveEvent event) {
                     for (int i = 0; i < 99; i++) {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
-                            if (Settings.ntfyNearbyShaking && Settings.ntfyFeltShaking) {
+                            if ((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) && Settings.ntfyFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
                                     sendQuakeRemoveInfo(event.earthquake());
                                 } else {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
                                 }
-                            } else if (Settings.ntfyNearbyShaking) {
+                            } else if (Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) {
                                 sendQuakeRemoveInfo(event.earthquake());
                             } else if (Settings.ntfyFeltShaking) {
                                 if (!earthquakeList[currentEarthquake][1].equals("0")) {
