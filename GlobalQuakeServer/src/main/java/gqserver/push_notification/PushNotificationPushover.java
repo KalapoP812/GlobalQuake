@@ -121,6 +121,11 @@ public class PushNotificationPushover extends ListenerAdapter {
         }
     }
 
+    private static List<String> createUserIDList() {
+        String[] userIds = Settings.pushoverUserID.split(",");
+        return Arrays.asList(userIds);
+    }
+
     private static void determineType(QuakeUpdateEvent event, int i) {
         // if current earthquake was not felt but now is, send notification
         if (Integer.parseInt(earthquakeList[i][1]) > 0 && Integer.parseInt(earthquakeList[i][2]) == 0) {
@@ -242,33 +247,37 @@ public class PushNotificationPushover extends ListenerAdapter {
             return;
         }
 
-        CompletableFuture.runAsync(() -> {
-            String urlParametersPushover = "token=" + Settings.pushoverToken +
-                    "&user=" + Settings.pushoverUserID +
-                    "&priority=" + priority +
-                    "&title=" + title +
-                    "&message=" + description;
-            if (useCustomSounds) {
-                urlParametersPushover += "&sound=" + customSound;
-            }
-            try {
-                URL url = new URL(PUSHOVER_URL);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                conn.setDoOutput(true);
+        List<String> userIdList = createUserIDList();
 
-                byte[] postData = urlParametersPushover.getBytes(StandardCharsets.UTF_8);
-                try (OutputStream os = conn.getOutputStream()) {
-                    os.write(postData, 0, postData.length);
+        for (String userId : userIdList) {
+            CompletableFuture.runAsync(() -> {
+                String urlParametersPushover = "token=" + Settings.pushoverToken +
+                        "&user=" + userId +
+                        "&priority=" + priority +
+                        "&title=" + title +
+                        "&message=" + description;
+                if (useCustomSounds) {
+                    urlParametersPushover += "&sound=" + customSound;
                 }
+                try {
+                    URL url = new URL(PUSHOVER_URL);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    conn.setDoOutput(true);
 
-                int responseCode = conn.getResponseCode();
-                System.out.println("Pushover detected earthquake nearby. Response Code: " + responseCode);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+                    byte[] postData = urlParametersPushover.getBytes(StandardCharsets.UTF_8);
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(postData, 0, postData.length);
+                    }
+
+                    int responseCode = conn.getResponseCode();
+                    System.out.println("Pushover detected earthquake nearby. Response Code: " + responseCode);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
     private static String formatLevel(Level level) {
         if (level == null) {
@@ -279,27 +288,33 @@ public class PushNotificationPushover extends ListenerAdapter {
     }
 
     public static void startNotification() {
-        String urlParametersPushover = "token=" + Settings.pushoverToken +
-                "&user=" + Settings.pushoverUserID +
-                "&priority=" + 0 +
-                "&title=Server Starting" +
-                "&message=This may take a few minutes to complete.";
-        try {
-            URL url = new URL(PUSHOVER_URL);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-            conn.setDoOutput(true);
+        List<String> userIdList = createUserIDList();
 
-            byte[] postData = urlParametersPushover.getBytes(StandardCharsets.UTF_8);
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(postData, 0, postData.length);
-            }
+        for (String userId : userIdList) {
+            CompletableFuture.runAsync(() -> {
+                String urlParametersPushover = "token=" + Settings.pushoverToken +
+                        "&user=" + userId +
+                        "&priority=" + -1 +
+                        "&title=Server Starting" +
+                        "&message=This may take a few minutes to complete.";
+                try {
+                    URL url = new URL(PUSHOVER_URL);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    conn.setDoOutput(true);
 
-            int responseCode = conn.getResponseCode();
-            System.out.println("Start message. Response Code: " + responseCode);
-        } catch (Exception e) {
-            e.printStackTrace();
+                    byte[] postData = urlParametersPushover.getBytes(StandardCharsets.UTF_8);
+                    try (OutputStream os = conn.getOutputStream()) {
+                        os.write(postData, 0, postData.length);
+                    }
+
+                    int responseCode = conn.getResponseCode();
+                    System.out.println("Start message. Response Code: " + responseCode);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 

@@ -283,7 +283,7 @@ public class AlertSettingsPanel extends SettingsPanel {
         textFieldNtfy.setEnabled(chkBoxNtfy.isSelected());
         chkBoxNtfy.addChangeListener(changeEvent -> textFieldNtfy.setEnabled(chkBoxNtfy.isSelected()));
 
-        JPanel ntfyPanel = new JPanel(new GridLayout(2, 1));
+        JPanel ntfyPanel = new JPanel(new GridLayout(3, 1));
         ntfyPanel.setBorder(BorderFactory.createTitledBorder("Ntfy Url"));
 
         JPanel ntfyUseNtfyPanel = new JPanel();
@@ -298,6 +298,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         ntfyUrlPanel.add(textFieldNtfy);
 
         ntfyPanel.add(ntfyUrlPanel);
+
+        JPanel ntfyUrlMessagePanel = new JPanel();
+        ntfyUrlMessagePanel.setLayout(new BoxLayout(ntfyUrlMessagePanel, BoxLayout.X_AXIS));
+        ntfyUrlMessagePanel.add(new JLabel("For multiple urls, separate them with commas"));
+
+        ntfyPanel.add(ntfyUrlMessagePanel);
 
         panel.add(ntfyPanel);
 
@@ -443,7 +449,7 @@ public class AlertSettingsPanel extends SettingsPanel {
             textFieldPushoverToken.setEnabled(chkBoxPushover.isSelected());
         });
 
-        JPanel pushoverPanel = new JPanel(new GridLayout(3, 1));
+        JPanel pushoverPanel = new JPanel(new GridLayout(4, 1));
         pushoverPanel.setBorder(BorderFactory.createTitledBorder("Pushover Credentials"));
 
         JPanel usePushoverPanel = new JPanel();
@@ -465,6 +471,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         pushoverTokenPanel.add(textFieldPushoverToken);
 
         pushoverPanel.add(pushoverTokenPanel);
+
+        JPanel pushoverMessagePanel = new JPanel();
+        pushoverMessagePanel.setLayout(new BoxLayout(pushoverMessagePanel, BoxLayout.X_AXIS));
+        pushoverMessagePanel.add(new JLabel("For multiple users using the same token, separate them with commas"));
+
+        pushoverPanel.add(pushoverMessagePanel);
 
         panel.add(pushoverPanel);
 

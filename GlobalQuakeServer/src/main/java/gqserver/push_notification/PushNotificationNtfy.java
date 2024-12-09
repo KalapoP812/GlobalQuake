@@ -119,6 +119,11 @@ public class PushNotificationNtfy extends ListenerAdapter {
         }
     }
 
+    private static List<String> createUrlList(){
+        String[] urlList = Settings.ntfy.split(",");
+        return Arrays.asList(urlList);
+    }
+
     private static void determineType(QuakeUpdateEvent event, int i) {
         // if current earthquake was not felt but now is, send notification
         if (Integer.parseInt(earthquakeList[i][1]) > 0 && Integer.parseInt(earthquakeList[i][2]) == 0) {
@@ -227,31 +232,34 @@ public class PushNotificationNtfy extends ListenerAdapter {
     }
 
     private static void sendNotification(String title, String description, int priority) {
-
         if (!Settings.useNtfy) {
             return;
         }
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                URL url = new URL(Settings.ntfy);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("title", title);
-                connection.setRequestProperty("priority", String.valueOf(priority));
-                connection.setDoOutput(true);
+        List<String> urlList = createUrlList();
 
-                try (OutputStream os = connection.getOutputStream()) {
-                    byte[] input = description.getBytes(StandardCharsets.UTF_8);
-                    os.write(input, 0, input.length);
+        for (String url : urlList) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    URL ntfyUrl = new URL(url);
+                    HttpURLConnection connection = (HttpURLConnection) ntfyUrl.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("title", title);
+                    connection.setRequestProperty("priority", String.valueOf(priority));
+                    connection.setDoOutput(true);
+
+                    try (OutputStream os = connection.getOutputStream()) {
+                        byte[] input = description.getBytes(StandardCharsets.UTF_8);
+                        os.write(input, 0, input.length);
+                    }
+
+                    int responseCode = connection.getResponseCode();
+                    System.out.println("Ntfy Detected earthquake nearby. Response Code: " + responseCode); // Debugging
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-                int responseCode = connection.getResponseCode();
-                System.out.println("Ntfy Detected earthquake nearby. Response Code: " + responseCode); // Debugging
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+            });
+        }
     }
     private static String formatLevel(Level level) {
         if (level == null) {
@@ -262,26 +270,31 @@ public class PushNotificationNtfy extends ListenerAdapter {
     }
 
     public static void startNotification() {
-        String title = "Server Starting";
-        try {
-            URL url = new URL(Settings.ntfy);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("title", title);
-            connection.setRequestProperty("priority", "3");
-            connection.setDoOutput(true);
+        List<String> urlList = createUrlList();
 
-            String message = "This may take a few minutes to complete.";
+        for (String url : urlList) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    URL ntfyUrl = new URL(url);
+                    HttpURLConnection connection = (HttpURLConnection) ntfyUrl.openConnection();
+                    connection.setRequestMethod("POST");
+                    connection.setRequestProperty("title", "Server Starting");
+                    connection.setRequestProperty("priority", "2");
+                    connection.setDoOutput(true);
 
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = message.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
+                    String message = "This may take a few minutes to complete.";
 
-            int responseCode = connection.getResponseCode();
-            System.out.println("Start message. Response Code: " + responseCode); // Debugging
-        } catch (Exception e) {
-            e.printStackTrace();
+                    try (OutputStream os = connection.getOutputStream()) {
+                        byte[] input = message.getBytes(StandardCharsets.UTF_8);
+                        os.write(input, 0, input.length);
+                    }
+
+                    int responseCode = connection.getResponseCode();
+                    System.out.println("Start message. Response Code: " + responseCode); // Debugging
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
