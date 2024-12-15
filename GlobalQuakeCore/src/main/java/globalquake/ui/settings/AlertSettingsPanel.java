@@ -486,7 +486,7 @@ public class AlertSettingsPanel extends SettingsPanel {
         chkBoxPushoverNearbyShaking.addChangeListener(changeEvent -> chkBoxPushoverSendRevisions.setEnabled(chkBoxPushoverNearbyShaking.isSelected()));
         chkBoxPushoverFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.pushoverFeltShaking);
 
-        JPanel pushoverShakingPanel = new JPanel(new GridLayout(3, 1));
+        JPanel pushoverShakingPanel = new JPanel(new GridLayout(4, 1));
         pushoverShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
 
         JPanel pushoverNearbyShakingPanel = new JPanel();
@@ -506,6 +506,12 @@ public class AlertSettingsPanel extends SettingsPanel {
         pushoverFeltShakingPanel.add(chkBoxPushoverFeltShaking);
 
         pushoverShakingPanel.add(pushoverFeltShakingPanel);
+
+        JPanel pushoverShakingMessagePanel = new JPanel();
+        pushoverShakingMessagePanel.setLayout(new BoxLayout(pushoverShakingMessagePanel, BoxLayout.X_AXIS));
+        pushoverShakingMessagePanel.add(new JLabel("Enable Earthquake Reports in Debug Settings to receive Final Reports"));
+
+        pushoverShakingPanel.add(pushoverShakingMessagePanel);
 
         panel.add(pushoverShakingPanel);
 

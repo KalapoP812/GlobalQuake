@@ -13,11 +13,13 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import globalquake.core.Settings;
 
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -36,6 +38,8 @@ public class PushNotificationPushover extends ListenerAdapter {
     [x][2]: Max intensity at home location*/
     private static int currentEarthquake = -1;
 
+    public static final File ANALYSIS_FOLDER = new File(GlobalQuake.mainFolder, "/volume/events/");
+    private static final DateTimeFormatter fileFormat = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss").withZone(ZoneId.systemDefault());
 
     public static void init() {
         if (Settings.pushoverFeltShaking || Settings.pushoverNearbyShaking) {
@@ -90,11 +94,11 @@ public class PushNotificationPushover extends ListenerAdapter {
                         }
                     }
                 }
-                
+
                 @Override
-                public void onQuakeArchive(QuakeArchiveEvent event) {
+                public void onQuakeReport(QuakeReportEvent event) {
                     if (Settings.pushoverNearbyShaking)
-                        sendQuakeReportInfo(event.earthquake());
+                        sendQuakeReportInfo(event);
                 }
 
                 @Override
@@ -209,14 +213,14 @@ public class PushNotificationPushover extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), priority, useCustomSounds, customSound);
     }
 
-    private static void sendQuakeReportInfo(Earthquake earthquake) {
-        if (!Settings.usePushover || !isQuakeNearby(earthquake)) {
+    private static void sendQuakeReportInfo(QuakeReportEvent event) {
+        if (!Settings.usePushover || !isQuakeNearby(event.earthquake())) {
             return;
         }
 
         String Title = "Final quake report";
 
-        sendNotification(Title, createDescription(earthquake), Settings.pushoverNearbyShakingPriorityList,
+        sendNotificationWithImage(event.earthquake() ,Title, createDescription(event.earthquake()), Settings.pushoverNearbyShakingPriorityList,
                 Settings.usePushoverCustomSounds, Settings.pushoverSoundDetected);
     }
 
@@ -279,6 +283,71 @@ public class PushNotificationPushover extends ListenerAdapter {
             });
         }
     }
+
+    private static void sendNotificationWithImage(Earthquake earthquake, String title, String description, int priority, boolean useCustomSounds, String customSound){
+        if (!Settings.usePushover) {
+            return;
+        }
+
+        List<String> userIdList = createUserIDList();
+        String boundary = Long.toHexString(System.currentTimeMillis());
+        String CRLF = "\r\n";
+        String filePath = ANALYSIS_FOLDER + "/" + String.format("M%2.2f_%s_%s", earthquake.getMag(),
+                earthquake.getRegion().replace(' ', '_'), fileFormat.format(Instant.ofEpochMilli(earthquake.getOrigin())) + "/map.png");
+
+        while (!new File(filePath).exists()) { // Wait for the image to be created
+            try {
+                Thread.sleep(1000); // Wait for 1 second before checking again
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (!useCustomSounds) customSound = "";
+        String finalCustomSound = customSound;
+
+        for (String userId : userIdList) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    URL url = new URL(PUSHOVER_URL);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+                    conn.setDoOutput(true);
+
+                    try (OutputStream os = conn.getOutputStream()) {
+                        String[] params = {"token", Settings.pushoverToken, "user", userId, "priority", String.valueOf(priority),
+                                "sound", finalCustomSound, "title", title, "message", description};
+                        for (int i = 0; i < params.length; i += 2) {
+                            os.write(("--" + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
+                            os.write(("Content-Disposition: form-data; name=\"" + params[i] + "\"" + CRLF).getBytes(StandardCharsets.UTF_8));
+                            os.write(("Content-Type: text/plain; charset=UTF-8" + CRLF + CRLF).getBytes(StandardCharsets.UTF_8));
+                            os.write((params[i + 1] + CRLF).getBytes(StandardCharsets.UTF_8));
+                        }
+
+                        os.write(("--" + boundary + CRLF).getBytes(StandardCharsets.UTF_8));
+                        os.write(("Content-Disposition: form-data; name=\"attachment\"; filename=\"" + filePath + "\"" + CRLF).getBytes(StandardCharsets.UTF_8));
+                        os.write(("Content-Type: application/octet-stream" + CRLF + CRLF).getBytes(StandardCharsets.UTF_8));
+
+                        try (FileInputStream fis = new FileInputStream(filePath)) {
+                            byte[] buffer = new byte[4096];
+                            int bytesRead;
+                            while ((bytesRead = fis.read(buffer)) != -1) {
+                                os.write(buffer, 0, bytesRead);
+                            }
+                        }
+
+                        os.write((CRLF + "--" + boundary + "--" + CRLF).getBytes(StandardCharsets.UTF_8));
+                    }
+
+                    System.out.println("Message with Image. Response Code: " + conn.getResponseCode());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
     private static String formatLevel(Level level) {
         if (level == null) {
             return "-";
