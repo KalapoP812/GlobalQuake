@@ -1,6 +1,7 @@
 package gqserver.push_notification;
 
 import globalquake.core.GlobalQuake;
+import globalquake.core.analysis.Event;
 import globalquake.core.earthquake.data.Earthquake;
 import globalquake.core.events.GlobalQuakeEventListener;
 import globalquake.core.events.specific.*;
@@ -8,10 +9,14 @@ import globalquake.core.geo.DistanceUnit;
 import globalquake.core.geo.taup.TauPTravelTimeCalculator;
 import globalquake.core.intensity.IntensityScales;
 import globalquake.core.intensity.Level;
+import globalquake.core.report.EarthquakeReporter;
+import globalquake.core.report.StationReport;
+import globalquake.core.station.AbstractStation;
 import globalquake.utils.GeoUtils;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import globalquake.core.Settings;
+import org.tinylog.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -55,6 +60,8 @@ public class PushNotificationPushover extends ListenerAdapter {
                     earthquakeList[currentEarthquake][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
                     earthquakeList[currentEarthquake][2] = earthquakeList[currentEarthquake][1];
 
+                    createMap(event.earthquake());
+
                     if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) && Settings.pushoverFeltShaking) {
                         if (earthquakeList[currentEarthquake][1].equals("0")) {
                             sendQuakeCreateInfo(event.earthquake());
@@ -76,6 +83,8 @@ public class PushNotificationPushover extends ListenerAdapter {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
                             earthquakeList[i][1] = String.valueOf(determineHomeShakingIntensity(event.earthquake()));
 
+                            createMap(event.earthquake());
+
                             if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) && Settings.pushoverFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
                                     sendQuakeUpdateInfo(event.earthquake());
@@ -96,9 +105,9 @@ public class PushNotificationPushover extends ListenerAdapter {
                 }
 
                 @Override
-                public void onQuakeReport(QuakeReportEvent event) {
+                public void onQuakeArchive(QuakeArchiveEvent event) {
                     if (Settings.pushoverNearbyShaking)
-                        sendQuakeReportInfo(event);
+                        sendQuakeReportInfo(event.earthquake());
                 }
 
                 @Override
@@ -122,6 +131,50 @@ public class PushNotificationPushover extends ListenerAdapter {
                     }
                 }
             });
+        }
+    }
+
+    private static void createMap(Earthquake earthquake){
+        File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "/");
+        if (!folder.exists()) {
+            if (!folder.mkdirs()) {
+                Logger.error("Unable to create directory for reports! %s".formatted(folder.getAbsolutePath()));
+                return;
+            }
+        }
+
+        for (Event e : earthquake.getCluster().getAssignedEvents().values()) {
+            AbstractStation station = e.getAnalysis().getStation();
+            e.report = new StationReport(station.getNetworkCode(), station.getStationCode(),
+                    station.getChannelName(), station.getLocationCode(), station.getLatitude(), station.getLongitude(),
+                    station.getAlt());
+        }
+
+        EarthquakeReporter.drawMap(folder, earthquake);
+    }
+
+    private static void removeTempFolder(Earthquake earthquake) {
+        File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "/");
+        if (folder.exists()) {
+            deleteDirectory(folder);
+        }
+    }
+
+    private static void deleteDirectory(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) { // Check if directory is not empty
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    if (!file.delete()) {
+                        Logger.error("Unable to delete file: %s".formatted(file.getAbsolutePath()));
+                    }
+                }
+            }
+        }
+        if (!directory.delete()) {
+            Logger.error("Unable to delete directory: %s".formatted(directory.getAbsolutePath()));
         }
     }
 
@@ -150,7 +203,9 @@ public class PushNotificationPushover extends ListenerAdapter {
 
         String Title = "Earthquake Detected";
 
-        sendNotification(Title, createDescription(earthquake), Settings.pushoverNearbyShakingPriorityList,
+        File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "/");
+
+        sendNotificationWithImage(folder, Title, createDescription(earthquake), Settings.pushoverNearbyShakingPriorityList,
                 Settings.usePushoverCustomSounds, Settings.pushoverSoundDetected);
     }
 
@@ -183,7 +238,9 @@ public class PushNotificationPushover extends ListenerAdapter {
 
         String Title = "Revision #%d".formatted(earthquake.getRevisionID());
 
-        sendNotification(Title, createDescription(earthquake), -1, false, null);
+        File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "/");
+
+        sendNotificationWithImage(folder, Title, createDescription(earthquake), -1, false, null);
     }
 
     private static void sendQuakeUpdateInfoEEW(Earthquake earthquake, int currentEarthquakeUpdate) {
@@ -213,15 +270,19 @@ public class PushNotificationPushover extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), priority, useCustomSounds, customSound);
     }
 
-    private static void sendQuakeReportInfo(QuakeReportEvent event) {
-        if (!Settings.usePushover || !isQuakeNearby(event.earthquake())) {
+    private static void sendQuakeReportInfo(Earthquake earthquake) {
+        if (!Settings.usePushover || !isQuakeNearby(earthquake)) {
             return;
         }
 
+        File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "/");
+
         String Title = "Final quake report";
 
-        sendNotificationWithImage(event.earthquake() ,Title, createDescription(event.earthquake()), Settings.pushoverNearbyShakingPriorityList,
+        CompletableFuture<Void> future = sendNotificationWithImage(folder, Title, createDescription(earthquake), Settings.pushoverNearbyShakingPriorityList,
                 Settings.usePushoverCustomSounds, Settings.pushoverSoundDetected);
+
+        future.thenRun(() -> removeTempFolder(earthquake));
     }
 
     private static void sendQuakeRemoveInfo(Earthquake earthquake) {
@@ -233,6 +294,8 @@ public class PushNotificationPushover extends ListenerAdapter {
         String message = "M%.1f %s".formatted(earthquake.getMag(), earthquake.getRegion());
 
         sendNotification(Title, message, Settings.pushoverNearbyShakingPriorityList, false, null);
+
+        removeTempFolder(earthquake);
     }
 
     private static void sendQuakeRemoveInfoEEW(Earthquake earthquake) {
@@ -245,7 +308,7 @@ public class PushNotificationPushover extends ListenerAdapter {
 
         sendNotification(Title, message, 0, false, null);
     }
-
+    // Only to be used for EEWs as it is faster without image
     private static void sendNotification(String title, String description, int priority, boolean useCustomSounds, String customSound) {
         if (!Settings.usePushover) {
             return;
@@ -284,16 +347,15 @@ public class PushNotificationPushover extends ListenerAdapter {
         }
     }
 
-    private static void sendNotificationWithImage(Earthquake earthquake, String title, String description, int priority, boolean useCustomSounds, String customSound){
+    private static CompletableFuture<Void> sendNotificationWithImage(File folder, String title, String description, int priority, boolean useCustomSounds, String customSound) {
         if (!Settings.usePushover) {
-            return;
+            return CompletableFuture.completedFuture(null);
         }
 
         List<String> userIdList = createUserIDList();
         String boundary = Long.toHexString(System.currentTimeMillis());
         String CRLF = "\r\n";
-        String filePath = ANALYSIS_FOLDER + "/" + String.format("M%2.2f_%s_%s", earthquake.getMag(),
-                earthquake.getRegion().replace(' ', '_'), fileFormat.format(Instant.ofEpochMilli(earthquake.getOrigin())) + "/map.png");
+        String filePath = folder.getAbsolutePath() + "/map.png";
 
         while (!new File(filePath).exists()) { // Wait for the image to be created
             try {
@@ -306,8 +368,10 @@ public class PushNotificationPushover extends ListenerAdapter {
         if (!useCustomSounds) customSound = "";
         String finalCustomSound = customSound;
 
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         for (String userId : userIdList) {
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
                     URL url = new URL(PUSHOVER_URL);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -345,7 +409,11 @@ public class PushNotificationPushover extends ListenerAdapter {
                     e.printStackTrace();
                 }
             });
+
+            futures.add(future);
         }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
 
     private static String formatLevel(Level level) {
