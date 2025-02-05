@@ -50,6 +50,10 @@ public class AlertSettingsPanel extends SettingsPanel {
     private JComboBox<Integer> pushoverStrongShakingPriorityListJComboBox;
     private JCheckBox chkBoxNtfySendRevisions;
     private JCheckBox chkBoxPushoverSendRevisions;
+    private JCheckBox chkBoxNtfySendEEW;
+    private JCheckBox chkBoxPushoverSendEEW;
+    private JComboBox<Integer> ntfyEEWPriorityListJComboBox;
+    private JComboBox<Integer> pushoverEEWPriorityListJComboBox;
 
 
     public AlertSettingsPanel() {
@@ -311,9 +315,10 @@ public class AlertSettingsPanel extends SettingsPanel {
         chkBoxNtfySendRevisions = new JCheckBox("Notify every revision update for nearby shaking", Settings.ntfySendRevisions);
         chkBoxNtfySendRevisions.setEnabled(chkBoxNtfyNearbyShaking.isSelected());
         chkBoxNtfyNearbyShaking.addChangeListener(changeEvent -> chkBoxNtfySendRevisions.setEnabled(chkBoxNtfyNearbyShaking.isSelected()));
+        chkBoxNtfySendEEW = new JCheckBox("Notify when EEW is detected", Settings.ntfySendEEW);
         chkBoxNtfyFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.ntfyFeltShaking);
 
-        JPanel ntfyShakingPanel = new JPanel(new GridLayout(3, 1));
+        JPanel ntfyShakingPanel = new JPanel(new GridLayout(4, 1));
         ntfyShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
 
         JPanel ntfyNearbyShakingPanel = new JPanel();
@@ -328,6 +333,12 @@ public class AlertSettingsPanel extends SettingsPanel {
 
         ntfyShakingPanel.add(ntfySendRevisionsPanel);
 
+        JPanel ntfySendEEWPanel = new JPanel();
+        ntfySendEEWPanel.setLayout(new BoxLayout(ntfySendEEWPanel, BoxLayout.X_AXIS));
+        ntfySendEEWPanel.add(chkBoxNtfySendEEW);
+
+        ntfyShakingPanel.add(ntfySendEEWPanel);
+
         JPanel ntfyFeltShakingPanel = new JPanel();
         ntfyFeltShakingPanel.setLayout(new BoxLayout(ntfyFeltShakingPanel, BoxLayout.X_AXIS));
         ntfyFeltShakingPanel.add(chkBoxNtfyFeltShaking);
@@ -336,19 +347,20 @@ public class AlertSettingsPanel extends SettingsPanel {
 
         panel.add(ntfyShakingPanel);
 
-        JPanel ntfyPriorityPanel = new JPanel(new GridLayout(3, 1));
+        JPanel ntfyPriorityPanel = new JPanel(new GridLayout(4, 1));
         ntfyPriorityPanel.setBorder(BorderFactory.createTitledBorder("Priority"));
 
         JPanel ntfyPriorityNearbyShakingPanel = new JPanel();
         ntfyPriorityNearbyShakingPanel.setLayout(new BoxLayout(ntfyPriorityNearbyShakingPanel, BoxLayout.X_AXIS));
 
-        DefaultComboBoxModel<Integer> model1 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        DefaultComboBoxModel<Integer> model1 = new DefaultComboBoxModel<>(new Integer[]{1, 2, 3, 4, 5});
         ntfyNearbyShakingPriorityListJComboBox = new JComboBox<>(model1);
         ntfyNearbyShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 if (value instanceof Integer) {
                     switch ((Integer) value) {
+                        case 1: value = "Lowest"; break;
                         case 2: value = "Low"; break;
                         case 3: value = "Normal"; break;
                         case 4: value = "High"; break;
@@ -368,13 +380,14 @@ public class AlertSettingsPanel extends SettingsPanel {
         JPanel ntfyPriorityLightShakingPanel = new JPanel();
         ntfyPriorityLightShakingPanel.setLayout(new BoxLayout(ntfyPriorityLightShakingPanel, BoxLayout.X_AXIS));
 
-        DefaultComboBoxModel<Integer> model2 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        DefaultComboBoxModel<Integer> model2 = new DefaultComboBoxModel<>(new Integer[]{1, 2, 3, 4, 5});
         ntfyLightShakingPriorityListJComboBox = new JComboBox<>(model2);
         ntfyLightShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 if (value instanceof Integer) {
                     switch ((Integer) value) {
+                        case 1: value = "Lowest"; break;
                         case 2: value = "Low"; break;
                         case 3: value = "Normal"; break;
                         case 4: value = "High"; break;
@@ -394,13 +407,14 @@ public class AlertSettingsPanel extends SettingsPanel {
         JPanel ntfyPriorityStrongShakingPanel = new JPanel();
         ntfyPriorityStrongShakingPanel.setLayout(new BoxLayout(ntfyPriorityStrongShakingPanel, BoxLayout.X_AXIS));
 
-        DefaultComboBoxModel<Integer> model3 = new DefaultComboBoxModel<>(new Integer[]{2, 3, 4, 5});
+        DefaultComboBoxModel<Integer> model3 = new DefaultComboBoxModel<>(new Integer[]{1, 2, 3, 4, 5});
         ntfyStrongShakingPriorityListJComboBox = new JComboBox<>(model3);
         ntfyStrongShakingPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
                 if (value instanceof Integer) {
                     switch ((Integer) value) {
+                        case 1: value = "Lowest"; break;
                         case 2: value = "Low"; break;
                         case 3: value = "Normal"; break;
                         case 4: value = "High"; break;
@@ -416,6 +430,33 @@ public class AlertSettingsPanel extends SettingsPanel {
         ntfyPriorityStrongShakingPanel.add(ntfyStrongShakingPriorityListJComboBox);
 
         ntfyPriorityPanel.add(ntfyPriorityStrongShakingPanel);
+
+        JPanel ntfyPriorityEEWPanel = new JPanel();
+        ntfyPriorityEEWPanel.setLayout(new BoxLayout(ntfyPriorityEEWPanel, BoxLayout.X_AXIS));
+
+        DefaultComboBoxModel<Integer> model4 = new DefaultComboBoxModel<>(new Integer[]{1, 2, 3, 4, 5});
+        ntfyEEWPriorityListJComboBox = new JComboBox<>(model4);
+        ntfyEEWPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case 1: value = "Lowest"; break;
+                        case 2: value = "Low"; break;
+                        case 3: value = "Normal"; break;
+                        case 4: value = "High"; break;
+                        case 5: value = "Highest"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        ntfyEEWPriorityListJComboBox.setSelectedItem(Settings.ntfyEEWPriorityList);
+
+        ntfyPriorityEEWPanel.add(new JLabel("Priority for EEW: "));
+        ntfyPriorityEEWPanel.add(ntfyEEWPriorityListJComboBox);
+
+        ntfyPriorityPanel.add(ntfyPriorityEEWPanel);
 
         panel.add(ntfyPriorityPanel);
 
@@ -484,9 +525,10 @@ public class AlertSettingsPanel extends SettingsPanel {
         chkBoxPushoverSendRevisions = new JCheckBox("Notify every revision update for nearby shaking", Settings.pushoverSendRevisions);
         chkBoxPushoverSendRevisions.setEnabled(chkBoxPushoverNearbyShaking.isSelected());
         chkBoxPushoverNearbyShaking.addChangeListener(changeEvent -> chkBoxPushoverSendRevisions.setEnabled(chkBoxPushoverNearbyShaking.isSelected()));
+        chkBoxPushoverSendEEW = new JCheckBox("Notify when EEW is detected", Settings.pushoverSendEEW);
         chkBoxPushoverFeltShaking = new JCheckBox("Notify when shaking is expected", Settings.pushoverFeltShaking);
 
-        JPanel pushoverShakingPanel = new JPanel(new GridLayout(3, 1));
+        JPanel pushoverShakingPanel = new JPanel(new GridLayout(4, 1));
         pushoverShakingPanel.setBorder(BorderFactory.createTitledBorder("Shaking Alerts"));
 
         JPanel pushoverNearbyShakingPanel = new JPanel();
@@ -501,6 +543,12 @@ public class AlertSettingsPanel extends SettingsPanel {
 
         pushoverShakingPanel.add(pushoverSendRevision);
 
+        JPanel pushoverSendEEWPanel = new JPanel();
+        pushoverSendEEWPanel.setLayout(new BoxLayout(pushoverSendEEWPanel, BoxLayout.X_AXIS));
+        pushoverSendEEWPanel.add(chkBoxPushoverSendEEW);
+
+        pushoverShakingPanel.add(pushoverSendEEWPanel);
+
         JPanel pushoverFeltShakingPanel = new JPanel();
         pushoverFeltShakingPanel.setLayout(new BoxLayout(pushoverFeltShakingPanel, BoxLayout.X_AXIS));
         pushoverFeltShakingPanel.add(chkBoxPushoverFeltShaking);
@@ -509,7 +557,7 @@ public class AlertSettingsPanel extends SettingsPanel {
         
         panel.add(pushoverShakingPanel);
 
-        JPanel pushoverPriorityPanel = new JPanel(new GridLayout(3, 1));
+        JPanel pushoverPriorityPanel = new JPanel(new GridLayout(4, 1));
         pushoverPriorityPanel.setBorder(BorderFactory.createTitledBorder("Priority"));
 
         JPanel pushoverPriorityNearbyShakingPanel = new JPanel();
@@ -590,6 +638,33 @@ public class AlertSettingsPanel extends SettingsPanel {
         pushoverPriorityStrongShakingPanel.add(pushoverStrongShakingPriorityListJComboBox);
 
         pushoverPriorityPanel.add(pushoverPriorityStrongShakingPanel);
+        
+        JPanel pushoverPriorityEEWPanel = new JPanel();
+        pushoverPriorityEEWPanel.setLayout(new BoxLayout(pushoverPriorityEEWPanel, BoxLayout.X_AXIS));
+        
+        DefaultComboBoxModel<Integer> model4 = new DefaultComboBoxModel<>(new Integer[]{-1, 0, 1});
+        
+        pushoverEEWPriorityListJComboBox = new JComboBox<>(model4);
+        
+        pushoverEEWPriorityListJComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                if (value instanceof Integer) {
+                    switch ((Integer) value) {
+                        case -1: value = "Low"; break;
+                        case 0: value = "Normal"; break;
+                        case 1: value = "High"; break;
+                    }
+                }
+                return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+            }
+        });
+        pushoverEEWPriorityListJComboBox.setSelectedItem(Settings.pushoverEEWPriorityList);
+
+        pushoverPriorityEEWPanel.add(new JLabel("Priority for EEW: "));
+        pushoverPriorityEEWPanel.add(pushoverEEWPriorityListJComboBox);
+
+        pushoverPriorityPanel.add(pushoverPriorityEEWPanel);
 
         panel.add(pushoverPriorityPanel);
 
@@ -707,6 +782,10 @@ public class AlertSettingsPanel extends SettingsPanel {
         Settings.pushoverStrongShakingPriorityList = (Integer) pushoverStrongShakingPriorityListJComboBox.getSelectedItem();
         Settings.ntfySendRevisions = chkBoxNtfySendRevisions.isSelected();
         Settings.pushoverSendRevisions = chkBoxPushoverSendRevisions.isSelected();
+        Settings.ntfySendEEW = chkBoxNtfySendEEW.isSelected();
+        Settings.pushoverSendEEW = chkBoxPushoverSendEEW.isSelected();
+        Settings.ntfyEEWPriorityList = (Integer) ntfyEEWPriorityListJComboBox.getSelectedItem();
+        Settings.pushoverEEWPriorityList = (Integer) pushoverEEWPriorityListJComboBox.getSelectedItem();
     }
 
     @Override
