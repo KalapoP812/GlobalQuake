@@ -137,7 +137,7 @@ public class PushNotificationPushover extends ListenerAdapter {
         File folder = new File(ANALYSIS_FOLDER, earthquake.getUuid() + "_Pushover/");
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
-                Logger.error("Unable to create directory for reports! %s".formatted(folder.getAbsolutePath()));
+                Logger.tag("Server").error("Unable to create directory for reports! %s".formatted(folder.getAbsolutePath()));
                 return;
             }
         }
@@ -160,7 +160,7 @@ public class PushNotificationPushover extends ListenerAdapter {
             do {
                 if (retries == 0) Logger.info("Deleting: %s".formatted(folder.getAbsolutePath()));
                 else {
-                    Logger.info("Retrying to delete: %s".formatted(folder.getAbsolutePath()));
+                    Logger.tag("Server").info("Retrying to delete: %s".formatted(folder.getAbsolutePath()));
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -170,7 +170,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                 deleteDirectory(folder);
                 retries++;
             } while (folder.exists() && retries < 5);
-            if (folder.exists()) Logger.error("Unable to delete folder: %s".formatted(folder.getAbsolutePath()));
+            if (folder.exists()) Logger.tag("Server").error("Unable to delete folder: %s".formatted(folder.getAbsolutePath()));
         }
         });
     }
@@ -183,13 +183,13 @@ public class PushNotificationPushover extends ListenerAdapter {
                     deleteDirectory(file);
                 } else {
                     if (!file.delete()) {
-                        Logger.error("Unable to delete file: %s".formatted(file.getAbsolutePath()));
+                        Logger.tag("Server").error("Unable to delete file: %s".formatted(file.getAbsolutePath()));
                     }
                 }
             }
         }
         if (!directory.delete()) {
-            Logger.error("Unable to delete directory: %s".formatted(directory.getAbsolutePath()));
+            Logger.tag("Server").error("Unable to delete directory: %s".formatted(directory.getAbsolutePath()));
         }
     }
 
@@ -382,7 +382,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                     }
 
                     int responseCode = conn.getResponseCode();
-                    Logger.info("Pushover message. Response Code: " + responseCode);
+                    Logger.tag("Server").info("Pushover message. Response Code: " + responseCode);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -408,7 +408,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                 if (retries == 0) Logger.info("Waiting for image to be created...");
                 else if (retries < 5) Logger.info("Retrying to send notification...");
                 else {
-                    Logger.error("Image not found. Sending notification without image...");
+                    Logger.tag("Server").error("Image not found. Sending notification without image...");
                     sendNotification(title, description, priority, useCustomSounds, customSound);
                     return CompletableFuture.completedFuture(null);
                 }
@@ -457,7 +457,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                         os.write((CRLF + "--" + boundary + "--" + CRLF).getBytes(StandardCharsets.UTF_8));
                     }
 
-                    Logger.info("Pushover message with image. Response Code: " + conn.getResponseCode());
+                    Logger.tag("Server").info("Pushover message with image. Response Code: " + conn.getResponseCode());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -500,7 +500,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                     }
 
                     int responseCode = conn.getResponseCode();
-                    Logger.info("Pushover server starting. Response Code: " + responseCode);
+                    Logger.tag("Server").info("Pushover server starting. Response Code: " + responseCode);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

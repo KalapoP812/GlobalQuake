@@ -279,7 +279,7 @@ public class PushNotificationNtfy extends ListenerAdapter {
                     }
 
                     int responseCode = connection.getResponseCode();
-                    Logger.info("Ntfy message. Response Code: " + responseCode);
+                    Logger.tag("Server").info("Ntfy message. Response Code: " + responseCode);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -315,7 +315,7 @@ public class PushNotificationNtfy extends ListenerAdapter {
                     }
 
                     int responseCode = connection.getResponseCode();
-                    Logger.info("Ntfy starting message. Response Code: " + responseCode);
+                    Logger.tag("Server").info("Ntfy starting message. Response Code: " + responseCode);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
