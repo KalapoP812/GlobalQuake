@@ -74,12 +74,12 @@ public class PushNotificationNtfy extends ListenerAdapter {
 
                             if (((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) || Settings.ntfySendEEW) && Settings.ntfyFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
-                                    sendQuakeUpdateInfo(event.earthquake());
+                                    sendQuakeUpdateInfo(event.earthquake(), i);
                                 } else {
                                     determineType(event, i);
                                 }
                             } else if ((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) || Settings.ntfySendEEW) {
-                                sendQuakeUpdateInfo(event.earthquake());
+                                sendQuakeUpdateInfo(event.earthquake(), i);
                             } else if (Settings.ntfyFeltShaking) {
                                 determineType(event, i);
                             }
@@ -103,12 +103,12 @@ public class PushNotificationNtfy extends ListenerAdapter {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
                             if (((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) || Settings.ntfySendEEW) && Settings.ntfyFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
-                                    sendQuakeRemoveInfo(event.earthquake());
+                                    sendQuakeRemoveInfo(event.earthquake(), i);
                                 } else {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
                                 }
                             } else if ((Settings.ntfyNearbyShaking && Settings.ntfySendRevisions) || Settings.ntfySendEEW) {
-                                sendQuakeRemoveInfo(event.earthquake());
+                                sendQuakeRemoveInfo(event.earthquake(), i);
                             } else if (Settings.ntfyFeltShaking) {
                                 if (!earthquakeList[currentEarthquake][1].equals("0")) {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
@@ -179,7 +179,7 @@ public class PushNotificationNtfy extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), priority);
     }
 
-    private static void sendQuakeUpdateInfo(Earthquake earthquake) {
+    private static void sendQuakeUpdateInfo(Earthquake earthquake, int currentEarthquakeUpdate) {
         boolean isEEW = IsEEW(earthquake);
 
         if (!Settings.useNtfy || !(Settings.ntfyNearbyShaking && Settings.ntfySendRevisions && isQuakeNearby(earthquake) ||
@@ -190,8 +190,8 @@ public class PushNotificationNtfy extends ListenerAdapter {
         String Title = "Revision #%d".formatted(earthquake.getRevisionID());
         int priority = 1;
 
-        if (earthquakeList[currentEarthquake][3].equals("0") && isEEW && Settings.ntfySendEEW) {
-            earthquakeList[currentEarthquake][3] = "1";
+        if (earthquakeList[currentEarthquakeUpdate][3].equals("0") && isEEW && Settings.ntfySendEEW) {
+            earthquakeList[currentEarthquakeUpdate][3] = "1";
             Title = "Strong Earthquake Detected (Rev #%d)".formatted(earthquake.getRevisionID());
             priority = Settings.ntfyEEWPriorityList;
         }
@@ -233,9 +233,9 @@ public class PushNotificationNtfy extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), Settings.ntfyNearbyShakingPriorityList);
     }
 
-    private static void sendQuakeRemoveInfo(Earthquake earthquake) {
+    private static void sendQuakeRemoveInfo(Earthquake earthquake, int currentEarthquakeUpdate) {
         if (!Settings.useNtfy || !(Settings.ntfyNearbyShaking && Settings.ntfySendRevisions && isQuakeNearby(earthquake) ||
-                Settings.ntfySendEEW && earthquakeList[currentEarthquake][3].equals("1"))) {
+                Settings.ntfySendEEW && earthquakeList[currentEarthquakeUpdate][3].equals("1"))) {
             return;
         }
 

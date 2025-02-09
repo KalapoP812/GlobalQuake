@@ -86,12 +86,12 @@ public class PushNotificationPushover extends ListenerAdapter {
 
                             if (((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) || Settings.pushoverSendEEW) && Settings.pushoverFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
-                                    sendQuakeUpdateInfo(event.earthquake());
+                                    sendQuakeUpdateInfo(event.earthquake(), i);
                                 } else {
                                     determineType(event, i);
                                 }
                             } else if (Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions || Settings.pushoverSendEEW) {
-                                sendQuakeUpdateInfo(event.earthquake());
+                                sendQuakeUpdateInfo(event.earthquake(), i);
                             } else if (Settings.pushoverFeltShaking) {
                                 determineType(event, i);
                             }
@@ -99,6 +99,7 @@ public class PushNotificationPushover extends ListenerAdapter {
                             if (Integer.parseInt(earthquakeList[i][2]) < Integer.parseInt(earthquakeList[i][1])) {
                                 earthquakeList[i][2] = earthquakeList[i][1];
                             }
+                            break;
                         }
                     }
                 }
@@ -115,12 +116,12 @@ public class PushNotificationPushover extends ListenerAdapter {
                         if (earthquakeList[i][0] != null && earthquakeList[i][0].equals(String.valueOf(event.earthquake().getUuid()))) {
                             if (((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) || Settings.pushoverSendEEW) && Settings.pushoverFeltShaking) {
                                 if (earthquakeList[currentEarthquake][1].equals("0") && earthquakeList[currentEarthquake][2].equals("0")) {
-                                    sendQuakeRemoveInfo(event.earthquake());
+                                    sendQuakeRemoveInfo(event.earthquake(), i);
                                 } else {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
                                 }
                             } else if ((Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions) || Settings.pushoverSendEEW) {
-                                sendQuakeRemoveInfo(event.earthquake());
+                                sendQuakeRemoveInfo(event.earthquake(), i);
                             } else if (Settings.pushoverFeltShaking) {
                                 if (!earthquakeList[currentEarthquake][1].equals("0")) {
                                     sendQuakeRemoveInfoEEW(event.earthquake());
@@ -257,7 +258,7 @@ public class PushNotificationPushover extends ListenerAdapter {
         sendNotification(Title, createDescription(earthquake), priority, Settings.usePushoverCustomSounds, customSound);
     }
 
-    private static void sendQuakeUpdateInfo(Earthquake earthquake) {
+    private static void sendQuakeUpdateInfo(Earthquake earthquake, int currentEarthquakeUpdate) {
         boolean isEEW = IsEEW(earthquake);
 
         if (!Settings.usePushover || !(Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions && isQuakeNearby(earthquake) ||
@@ -268,8 +269,8 @@ public class PushNotificationPushover extends ListenerAdapter {
         String Title = "Revision #%d".formatted(earthquake.getRevisionID());
         int priority = -1;
 
-        if (earthquakeList[currentEarthquake][3].equals("0") && isEEW && Settings.pushoverSendEEW) {
-            earthquakeList[currentEarthquake][3] = "1";
+        if (earthquakeList[currentEarthquakeUpdate][3].equals("0") && isEEW && Settings.pushoverSendEEW) {
+            earthquakeList[currentEarthquakeUpdate][3] = "1";
             Title = "Strong Earthquake Detected (Rev #%d)".formatted(earthquake.getRevisionID());
             priority = Settings.pushoverEEWPriorityList;
         }
@@ -327,9 +328,9 @@ public class PushNotificationPushover extends ListenerAdapter {
         future.thenRun(() -> removeTempFolder(earthquake));
     }
 
-    private static void sendQuakeRemoveInfo(Earthquake earthquake) {
+    private static void sendQuakeRemoveInfo(Earthquake earthquake, int currentEarthquakeUpdate) {
         if (!Settings.usePushover || !(Settings.pushoverNearbyShaking && Settings.pushoverSendRevisions && isQuakeNearby(earthquake) ||
-                Settings.pushoverSendEEW && earthquakeList[currentEarthquake][3].equals("1"))) {
+                Settings.pushoverSendEEW && earthquakeList[currentEarthquakeUpdate][3].equals("1"))) {
             return;
         }
 
@@ -405,8 +406,8 @@ public class PushNotificationPushover extends ListenerAdapter {
         while (!new File(filePath).exists()) { // Wait for the image to be created
             try {
                 Thread.sleep(1000); // Wait for 1 second before checking again
-                if (retries == 0) Logger.info("Waiting for image to be created...");
-                else if (retries < 5) Logger.info("Retrying to send notification...");
+                if (retries == 0) Logger.tag("Server").info("Waiting for image to be created...");
+                else if (retries < 5) Logger.tag("Server").info("Retrying to send notification...");
                 else {
                     Logger.tag("Server").error("Image not found. Sending notification without image...");
                     sendNotification(title, description, priority, useCustomSounds, customSound);
